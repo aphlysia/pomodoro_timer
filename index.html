@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f5">
+  <title>Pomodoro Timer</title>
+  <style>
+    :root {
+      font-family: system-ui, sans-serif;
+      color: #222;
+      background: #f5f5f5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app { width: min(100%, 460px); }
+    .device {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) 56px;
+      align-items: center;
+      gap: clamp(12px, 4vw, 28px);
+      padding: 28px clamp(16px, 5vw, 36px);
+      border-radius: 12px;
+      background: #171717;
+    }
+    .screen { min-width: 0; }
+    .matrix { --led-size: clamp(7px, 3.6vw, 11.5px); width: fit-content; max-width: 100%; margin: auto; display: grid; grid-template-columns: repeat(5, var(--led-size)); gap: calc(var(--led-size) * 2.5); }
+    .led { width: 100%; aspect-ratio: 1; border-radius: 2px; background: #ed332b; }
+    .led.off { background: #33201f; }
+    .led.current { animation: blink 1s steps(1, end) infinite; }
+    .paused .matrix { animation: blink .8s steps(1, end) infinite; }
+    .paused .led.current { animation: none; }
+    .complete .led { background: #33201f; }
+    @keyframes blink { 50% { opacity: .2; } }
+    .button-wrap { display: grid; justify-items: center; }
+    .physical-button {
+      position: relative;
+      width: 48px; height: 48px; padding: 0;
+      border: 0; border-radius: 3px;
+      background: #aaa;
+      cursor: pointer;
+    }
+    .physical-button::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: #222; }
+    .physical-button:active { background: #888; }
+    .physical-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="device" aria-label="25-minute Pomodoro timer">
+      <div class="button-wrap"><button class="physical-button" id="left" type="button" aria-label="Start, pause, or resume timer"></button></div>
+      <div class="screen" id="screen">
+        <div class="matrix" id="matrix" role="img" aria-label="25 LEDs, all lit"></div>
+      </div>
+      <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="Reset timer, or start a new timer when complete"></button></div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const DURATION = 25 * 60;
+      const matrix = document.getElementById('matrix');
+      const screen = document.getElementById('screen');
+      const leds = Array.from({ length: 25 }, () => {
+        const led = document.createElement('span');
+        led.className = 'led';
+        led.setAttribute('aria-hidden', 'true');
+        matrix.append(led);
+        return led;
+      });
+
+      let state = 'ready';
+      let elapsedBeforeRun = 0;
+      let startedAt = 0;
+      let frame = 0;
+
+      function elapsedSeconds() {
+        return state === 'running'
+          ? Math.min(DURATION, elapsedBeforeRun + (performance.now() - startedAt) / 1000)
+          : elapsedBeforeRun;
+      }
+
+      function render() {
+        const elapsed = elapsedSeconds();
+        const passedMinutes = Math.min(25, Math.floor(elapsed / 60));
+        leds.forEach((led, index) => {
+          led.className = index < passedMinutes ? 'led off' : index === passedMinutes && state !== 'ready' && state !== 'complete' ? 'led current' : 'led';
+        });
+        screen.classList.toggle('paused', state === 'paused');
+        screen.classList.toggle('complete', state === 'complete');
+        const remaining = Math.max(0, Math.ceil(DURATION / 60 - elapsed / 60));
+        const stateLabel = { ready: 'Ready', running: 'Running', paused: 'Paused', complete: 'Complete' }[state];
+        matrix.setAttribute('aria-label', `Timer ${stateLabel}. ${remaining} minutes remaining. ${passedMinutes} minutes elapsed.`);
+      }
+
+      function tick() {
+        if (state !== 'running') return;
+        if (elapsedSeconds() >= DURATION) {
+          elapsedBeforeRun = DURATION;
+          state = 'complete';
+          render();
+          return;
+        }
+        render();
+        frame = window.setTimeout(tick, 100);
+      }
+
+      function toggle() {
+        if (state === 'ready') {
+          state = 'running';
+          startedAt = performance.now();
+          tick();
+        } else if (state === 'running') {
+          elapsedBeforeRun = elapsedSeconds();
+          state = 'paused';
+          window.clearTimeout(frame);
+          render();
+        } else if (state === 'paused') {
+          state = 'running';
+          startedAt = performance.now();
+          tick();
+        } else {
+          reset();
+        }
+      }
+
+      function start() {
+        window.clearTimeout(frame);
+        elapsedBeforeRun = 0;
+        startedAt = performance.now();
+        state = 'running';
+        tick();
+      }
+
+      function reset() {
+        window.clearTimeout(frame);
+        state = 'ready';
+        elapsedBeforeRun = 0;
+        startedAt = 0;
+        render();
+      }
+
+      document.getElementById('left').addEventListener('click', toggle);
+      document.getElementById('right').addEventListener('click', () => {
+        if (state === 'complete') start();
+        else reset();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.key.toLowerCase() === 'a') { event.preventDefault(); toggle(); }
+        if (event.key.toLowerCase() === 'b') { event.preventDefault(); reset(); }
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
