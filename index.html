@@ -45,6 +45,7 @@
       border: 0; border-radius: 3px;
       background: #aaa;
       cursor: pointer;
+      touch-action: manipulation;
     }
     .physical-button::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: #222; }
     .physical-button:active { background: #888; }
@@ -81,7 +82,7 @@
       let startedAt = 0;
       let frame = 0;
       let holdTimer = 0;
-      let suppressRightClick = false;
+      let rightHoldTriggered = false;
 
       function elapsedSeconds() {
         return state === 'running'
@@ -154,14 +155,24 @@
         holdTimer = 0;
       }
 
-      document.getElementById('left').addEventListener('click', toggle);
+      document.getElementById('left').addEventListener('pointerup', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        toggle();
+      });
+      document.getElementById('left').addEventListener('click', event => {
+        if (event.detail === 0) toggle();
+      });
       rightButton.addEventListener('pointerdown', event => {
-        if (state !== 'running' || event.button !== 0) return;
+        if (event.button !== 0) return;
+        event.preventDefault();
+        rightHoldTriggered = false;
         rightButton.setPointerCapture(event.pointerId);
+        if (state !== 'running') return;
         holdTimer = window.setTimeout(() => {
           holdTimer = 0;
           if (state !== 'running') return;
-          suppressRightClick = true;
+          rightHoldTriggered = true;
           const advancedElapsed = elapsedSeconds() + 60;
           if (advancedElapsed >= DURATION) {
             window.clearTimeout(frame);
@@ -175,20 +186,20 @@
           }
         }, 600);
       });
-      rightButton.addEventListener('pointerup', clearHoldTimer);
+      rightButton.addEventListener('pointerup', event => {
+        clearHoldTimer();
+        if (event.button !== 0) return;
+        event.preventDefault();
+        if (!rightHoldTriggered) reset();
+      });
+      rightButton.addEventListener('click', event => {
+        if (event.detail === 0) reset();
+      });
       rightButton.addEventListener('pointercancel', () => {
         clearHoldTimer();
-        suppressRightClick = false;
+        rightHoldTriggered = false;
       });
       rightButton.addEventListener('lostpointercapture', clearHoldTimer);
-      rightButton.addEventListener('click', event => {
-        if (suppressRightClick) {
-          suppressRightClick = false;
-          event.preventDefault();
-          return;
-        }
-        reset();
-      });
       document.addEventListener('keydown', event => {
         if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
         if (event.key.toLowerCase() === 'a') { event.preventDefault(); toggle(); }
