@@ -50,6 +50,17 @@
     .physical-button::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: #222; }
     .physical-button:active { background: #888; }
     .physical-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    @media (max-width: 380px) {
+      body { padding: 12px; }
+      .device {
+        grid-template-columns: 40px minmax(0, 1fr) 40px;
+        gap: 10px;
+        padding: 20px 12px;
+      }
+      .matrix { --led-size: clamp(7px, 2.8vw, 10px); gap: calc(var(--led-size) * 1.8); }
+      .physical-button { width: 40px; height: 40px; }
+      .physical-button::after { inset: 9px; }
+    }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1s !important; transition-duration: .01ms !important; } }
   </style>
 </head>
