@@ -30,8 +30,8 @@
       background: #171717;
     }
     .screen { min-width: 0; }
-    .matrix { width: min(100%, 230px); aspect-ratio: 1; margin: auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: clamp(6px, 2vw, 11px); align-items: center; justify-items: center; }
-    .led { width: 50%; aspect-ratio: 1; border-radius: 2px; background: #ed332b; }
+    .matrix { --led-size: clamp(7px, 3.6vw, 11.5px); width: fit-content; max-width: 100%; margin: auto; display: grid; grid-template-columns: repeat(5, var(--led-size)); gap: calc(var(--led-size) * 2.5); }
+    .led { width: 100%; aspect-ratio: 1; border-radius: 2px; background: #ed332b; }
     .led.off { background: #33201f; }
     .led.current { animation: blink 1s steps(1, end) infinite; }
     .paused .matrix { animation: blink .8s steps(1, end) infinite; }
