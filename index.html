@@ -19,7 +19,7 @@
       place-items: center;
       padding: 24px;
     }
-    .app { width: min(100%, 460px); text-align: center; }
+    .app { width: min(100%, 460px); }
     .device {
       display: grid;
       grid-template-columns: 56px minmax(0, 1fr) 56px;
@@ -49,7 +49,6 @@
     .physical-button::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: #222; }
     .physical-button:active { background: #888; }
     .physical-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -59,8 +58,6 @@
       <div class="button-wrap"><button class="physical-button" id="left" type="button" aria-label="開始・一時停止・再開"></button></div>
       <div class="screen" id="screen">
         <div class="matrix" id="matrix" role="img" aria-label="25 個の LED：すべて点灯"></div>
-        <span class="sr-only" id="time" aria-live="off">25:00</span>
-        <span class="sr-only" id="status" aria-live="polite">準備完了</span>
       </div>
       <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="リセット"></button></div>
     </section>
@@ -70,11 +67,9 @@
       const DURATION = 25 * 60;
       const matrix = document.getElementById('matrix');
       const screen = document.getElementById('screen');
-      const timeDisplay = document.getElementById('time');
-      const statusDisplay = document.getElementById('status');
-      const leds = Array.from({ length: 25 }, (_, index) => {
+      const leds = Array.from({ length: 25 }, () => {
         const led = document.createElement('span');
-        led.className = 'led future';
+        led.className = 'led';
         led.setAttribute('aria-hidden', 'true');
         matrix.append(led);
         return led;
@@ -93,25 +88,15 @@
 
       function render() {
         const elapsed = elapsedSeconds();
-        const remaining = Math.max(0, Math.ceil(DURATION - elapsed));
-        const minutes = Math.floor(remaining / 60);
-        const seconds = remaining % 60;
-        timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
         const passedMinutes = Math.min(25, Math.floor(elapsed / 60));
         leds.forEach((led, index) => {
-          led.className = 'led ' + (index < passedMinutes ? 'off' : index === passedMinutes && state !== 'ready' && state !== 'complete' ? 'current' : 'future');
+          led.className = index < passedMinutes ? 'led off' : index === passedMinutes && state !== 'ready' && state !== 'complete' ? 'led current' : 'led';
         });
         screen.classList.toggle('paused', state === 'paused');
         screen.classList.toggle('complete', state === 'complete');
-        const labels = {
-          ready: 'READY · はじめましょう',
-          running: 'FOCUS · 集中中',
-          paused: 'PAUSED · 一時停止中',
-          complete: 'DONE · おつかれさま！'
-        };
-        statusDisplay.textContent = labels[state];
-        matrix.setAttribute('aria-label', state === 'complete' ? '25 個の LED：すべて消灯' : state === 'ready' ? '25 個の LED：すべて点灯' : `${passedMinutes} 分経過`);
+        const remaining = Math.max(0, Math.ceil(DURATION / 60 - elapsed / 60));
+        const stateLabel = { ready: '待機中', running: '作動中', paused: '一時停止中', complete: '完了' }[state];
+        matrix.setAttribute('aria-label', `タイマー${stateLabel}。残り${remaining}分。${passedMinutes}分経過。`);
       }
 
       function tick() {
