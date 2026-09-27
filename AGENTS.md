@@ -13,10 +13,11 @@ A Pomodoro timer with a simple micro:bit-inspired appearance, implemented in a s
 | --- | --- | --- |
 | Ready | Press the left button | Start the timer. |
 | Running | Press the left button | Pause the timer. |
+| Running | Press and hold the right button | Advance the countdown by one minute. |
 | Paused | Press the left button | Resume the countdown. |
 | Paused | Press the right button | Return to the ready state. |
-| Complete | Press the left button | Return to the ready state. |
-| Complete | Press the right button | Start a new timer. |
+| Complete | Press the left button | Start a new timer. |
+| Complete | Press the right button | Return to the ready state. |
 
 ## LED display
 
