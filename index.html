@@ -59,7 +59,7 @@
       <div class="screen" id="screen">
         <div class="matrix" id="matrix" role="img" aria-label="25 LEDs, all lit"></div>
       </div>
-      <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="Reset timer, or start a new timer when complete"></button></div>
+      <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="Reset timer. While running, press and hold to advance one minute."></button></div>
     </section>
   </main>
   <script>
@@ -67,6 +67,7 @@
       const DURATION = 25 * 60;
       const matrix = document.getElementById('matrix');
       const screen = document.getElementById('screen');
+      const rightButton = document.getElementById('right');
       const leds = Array.from({ length: 25 }, () => {
         const led = document.createElement('span');
         led.className = 'led';
@@ -79,6 +80,8 @@
       let elapsedBeforeRun = 0;
       let startedAt = 0;
       let frame = 0;
+      let holdTimer = 0;
+      let suppressRightClick = false;
 
       function elapsedSeconds() {
         return state === 'running'
@@ -126,7 +129,7 @@
           startedAt = performance.now();
           tick();
         } else {
-          reset();
+          start();
         }
       }
 
@@ -146,10 +149,45 @@
         render();
       }
 
+      function clearHoldTimer() {
+        window.clearTimeout(holdTimer);
+        holdTimer = 0;
+      }
+
       document.getElementById('left').addEventListener('click', toggle);
-      document.getElementById('right').addEventListener('click', () => {
-        if (state === 'complete') start();
-        else reset();
+      rightButton.addEventListener('pointerdown', event => {
+        if (state !== 'running' || event.button !== 0) return;
+        rightButton.setPointerCapture(event.pointerId);
+        holdTimer = window.setTimeout(() => {
+          holdTimer = 0;
+          if (state !== 'running') return;
+          suppressRightClick = true;
+          const advancedElapsed = elapsedSeconds() + 60;
+          if (advancedElapsed >= DURATION) {
+            window.clearTimeout(frame);
+            elapsedBeforeRun = DURATION;
+            state = 'complete';
+            render();
+          } else {
+            elapsedBeforeRun = advancedElapsed;
+            startedAt = performance.now();
+            tick();
+          }
+        }, 600);
+      });
+      rightButton.addEventListener('pointerup', clearHoldTimer);
+      rightButton.addEventListener('pointercancel', () => {
+        clearHoldTimer();
+        suppressRightClick = false;
+      });
+      rightButton.addEventListener('lostpointercapture', clearHoldTimer);
+      rightButton.addEventListener('click', event => {
+        if (suppressRightClick) {
+          suppressRightClick = false;
+          event.preventDefault();
+          return;
+        }
+        reset();
       });
       document.addEventListener('keydown', event => {
         if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
