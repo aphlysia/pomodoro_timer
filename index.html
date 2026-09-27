@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5f5">
-  <title>ポモドーロタイマー</title>
+  <title>Pomodoro Timer</title>
   <style>
     :root {
       font-family: system-ui, sans-serif;
@@ -54,12 +54,12 @@
 </head>
 <body>
   <main class="app">
-    <section class="device" aria-label="25 分のポモドーロタイマー">
-      <div class="button-wrap"><button class="physical-button" id="left" type="button" aria-label="開始・一時停止・再開"></button></div>
+    <section class="device" aria-label="25-minute Pomodoro timer">
+      <div class="button-wrap"><button class="physical-button" id="left" type="button" aria-label="Start, pause, or resume timer"></button></div>
       <div class="screen" id="screen">
-        <div class="matrix" id="matrix" role="img" aria-label="25 個の LED：すべて点灯"></div>
+        <div class="matrix" id="matrix" role="img" aria-label="25 LEDs, all lit"></div>
       </div>
-      <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="リセット"></button></div>
+      <div class="button-wrap"><button class="physical-button" id="right" type="button" aria-label="Reset timer, or start a new timer when complete"></button></div>
     </section>
   </main>
   <script>
@@ -95,8 +95,8 @@
         screen.classList.toggle('paused', state === 'paused');
         screen.classList.toggle('complete', state === 'complete');
         const remaining = Math.max(0, Math.ceil(DURATION / 60 - elapsed / 60));
-        const stateLabel = { ready: '待機中', running: '作動中', paused: '一時停止中', complete: '完了' }[state];
-        matrix.setAttribute('aria-label', `タイマー${stateLabel}。残り${remaining}分。${passedMinutes}分経過。`);
+        const stateLabel = { ready: 'Ready', running: 'Running', paused: 'Paused', complete: 'Complete' }[state];
+        matrix.setAttribute('aria-label', `Timer ${stateLabel}. ${remaining} minutes remaining. ${passedMinutes} minutes elapsed.`);
       }
 
       function tick() {

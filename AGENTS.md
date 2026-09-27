@@ -1,43 +1,44 @@
-ポモドーロタイマーのプロジェクトです。
+# Pomodoro Timer
 
-見た目は micro:bit です。
-html ファイル1つで実現します。
+A Pomodoro timer with a simple micro:bit-inspired appearance, implemented in a single HTML file.
 
-# 仕様
+## Requirements
 
-* 25 分間をカウントするタイマーです
-* html を開くと micro:bit のような画面が表示されます
+- Count down from 25 minutes.
+- Opening the HTML file displays the timer.
 
-状態毎の行動の結果
+## Controls
 
-| 状態 | 行動 | 結果 |
-| ---- | ---- | ---- |
-| 初期状態 | 左ボタン on | タイマーを開始。(タイマー作動中状態) |
-| タイマー作動中状態 | 左ボタン on | タイマーを一時停止。(一時停止状態) |
-| タイマー作動中状態 (25分経過) | 右ボタン on | タイマーを開始。(タイマー作動中状態) |
-| タイマー作動中状態 (25分経過) | 左ボタン on | 初期状態へ遷移 |
-| 一時停止状態 | 左ボタン on | カウントダウンを再開。(タイマー作動中状態) |
-| 一時停止状態 | 右ボタン on | 初期状態へ遷移 |
+| State | Action | Result |
+| --- | --- | --- |
+| Ready | Press the left button | Start the timer. |
+| Running | Press the left button | Pause the timer. |
+| Paused | Press the left button | Resume the countdown. |
+| Paused | Press the right button | Return to the ready state. |
+| Complete | Press the left button | Return to the ready state. |
+| Complete | Press the right button | Start a new timer. |
 
-LED の表示
+## LED display
 
-| 状態 | 表示 |
-| ---- | ---- |
-| 初期状態 | すべて点灯 |
-| タイマー動作中状態 | 過ぎた分は消灯。現在の分は点滅。まだの分は点灯 |
-| 一時停止状態 | 過ぎた分は消灯。現在の分とまだの分は点滅 |
+| State | Display |
+| --- | --- |
+| Ready | All LEDs are lit. |
+| Running | LEDs for elapsed minutes are off, the current minute blinks, and the remaining LEDs are lit. |
+| Paused | LEDs for elapsed minutes are off; the current and remaining LEDs blink together. |
+| Complete | All LEDs are off. |
 
-LED 表示の例
+Examples:
 
-* タイマーを開始した直後は左上の LED が点滅。その他は点灯
-* 1分経過したら左上の LED は消灯。その右が点滅。その他は点灯
-* 2分経過したら左上とその右の LED は消灯。その右が点滅。その他は点灯
-* 5分経過したら一番上の行は消灯。その下の行は左端の LED は点滅。その他は点灯
-* 25分経過したら全ての LED が消灯
+- At the start, the top-left LED blinks and all other LEDs are lit.
+- After one minute, the top-left LED is off, the next LED blinks, and all other LEDs are lit.
+- After two minutes, the first two LEDs are off, the next LED blinks, and all other LEDs are lit.
+- After five minutes, the top row is off, the first LED in the second row blinks, and all other LEDs are lit.
+- After 25 minutes, all LEDs are off.
 
-見た目
+## Appearance
 
-* micro:bit の見た目をシンプルにしたデザイン
-* 黒い基盤がある
-* 基盤の左と右にボタンがある。ボタンは灰色の正方形の中に黒い円
-* 中央に赤 LED が 5 x 5 の行列状に並んでいる。LED は正方形
+- Use a simple micro:bit-inspired design.
+- Use a black board with a button on each side.
+- Each button is a black circle inside a gray square.
+- Arrange 25 red square LEDs in a 5 × 5 grid at the center.
+- Do not display text on the page.
